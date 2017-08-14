@@ -90,7 +90,7 @@ def parse_jd_product_page(kw, session, limit=5):
                 skip += 1
                 if skip + 1 > limit:
                     break
-                # print(i)
+                    # print(i)
         return products
     except AttributeError as e:
         return {}
@@ -111,4 +111,70 @@ def get_jd_product(shop_ids, session):
     return []
 
 
+def get_tmall_product(kw, session, limit=5):
+    url = 'https://list.tmall.com/search_product.htm?q={0}&user_id=725677994&type=p&cat=50514008&spm=a3204.7084713.a2227oh.d100&from=chaoshi.index.pc_1_searchbutton'.format(
+        kw)
+    res = session.get(url=url).content
+    page = BeautifulSoup(res, 'html.parser')
+    try:
+        product_ul = page.find(id='J_ProductList').children
+        products = []
+        skip = 1
+        for i, product in enumerate(product_ul):
+            if not product == '\n':
+                name = product.select('.product-title a')[0].text
+                shop_name = '天猫超市'
+                price = product.select('.ui-price strong')[0].text
+                detail_url = product.select('.product-img a')[0]['href']
+                img_url = product.select('.product-img img')[0]['src']
+                products.append({
+                    'name': name,
+                    'shop_name': shop_name,
+                    'price': price,
+                    'detail_url': detail_url,
+                    'img_url': img_url
+                })
+                skip += 1
+                if skip > limit:
+                    break
+        return products
+
+    except Exception as e:
+        print(e)
+        return []
+
+
+def get_auchan_product(kw, session, limit=5):
+    url = 'http://cy.auchandrive.cn/product/search/?q={0}'.format(kw)
+    headers = base_headers.copy()
+    # TODO
+    
+    res = session.get(url=url).content
+    page = BeautifulSoup(res, 'html.parser')
+    try:
+        product_ul = page.find(id='auchan_product_list').children
+        products = []
+        skip = 1
+        for i, product in enumerate(product_ul):
+            if not product == '\n':
+                name = product.select('.product-title a')[0].text
+                shop_name = '天猫超市'
+                price = product.select('.ui-price strong')[0].text
+                detail_url = product.select('.product-img a')[0]['href']
+                img_url = product.select('.product-img img')[0]['src']
+                products.append({
+                    'name': name,
+                    'shop_name': shop_name,
+                    'price': price,
+                    'detail_url': detail_url,
+                    'img_url': img_url
+                })
+                skip += 1
+                if skip > limit:
+                    break
+        return products
+
+    except Exception as e:
+        print(e)
+        return []
 
