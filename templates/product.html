@@ -1,0 +1,98 @@
+{% extends 'layout/base.html' %}
+
+{% block main %}
+<div class="box">
+    <div class="box-body">
+        <div class="">
+            <label for="product-name" class="col-lg-3 col-md-3 col-sm-3 col-xs-3">商品名称: </label>
+            <input type="text" class="col-lg-6 col-md-6 col-sm-6 col-xs-9" id="product-name" placeholder="输入商品名称">
+        </div>
+
+        <button type="button" class="btn btn-primary btn-sm col-lg-3 col-md-3 col-sm-3 col-xs-12" id="product-search">搜索
+        </button>
+
+    </div>
+    <!-- /.box-header -->
+    <div class="box-body">
+        <table id="product-table" class="table table-bordered table-striped">
+            <thead>
+            <tr>
+                <th>超市</th>
+                <th>商品名称</th>
+                <th>商家</th>
+                <th>价格</th>
+                <th>商品详情链接</th>
+                <th>图片</th>
+            </tr>
+            </thead>
+            <tbody id="product-tbody">
+            {% for product in products %}
+            <tr>
+
+            </tr>
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+    <!-- /.box-body -->
+</div>
+
+{% endblock main %}
+
+{% block js %}
+<script>
+    function searchProduct() {
+        let product = $("#product-name").val()
+        $.ajax({
+            url: '/product/' + product,
+            beforeSend: function (xhr) {
+                $("#product-tbody").empty().append('<div class="overlay"><i class="fa fa-refresh fa-spin"></i></div>')
+            }
+        }).done(function (data) {
+            $("#product-tbody").empty()
+            let feiniuResult = data['feiniu']['list']
+            let tbody = ''
+
+            for (let i = 0; i < feiniuResult.length; i++) {
+                let name = feiniuResult[i]['name']
+                let storeName = feiniuResult[i]['store_name']
+                let price = feiniuResult[i]['CS000016_price']
+                let detailUrl = feiniuResult[i]['item_url']
+                let img = feiniuResult[i]['pic']
+                let tr = "<tr><td>飞牛网</td><td>" + name + "</td><td>" + storeName + "</td><td>" + price / 100 + "</td><td><a target='_blank' href='" + detailUrl + "'>" + detailUrl + "</a></td><td><img src='" + img + "'/></td>"
+                tbody = tbody + tr
+            }
+
+            let jdResult = data['jd']
+            let jdShopProduct = data['jd_shop_product']
+            for (let i = 0; i < jdResult.length; i++) {
+                let shop_id = jdResult[i]['shop_id']
+                let name = jdResult[i]['business_category']
+                let storeName = jdResult[i]['shop_name']
+                let detailUrl = jdShopProduct[shop_id][1]
+                let img = jdResult[i]['pic_url']
+                let product_id = jdShopProduct[shop_id][0]
+                let price = 0
+                $.ajax({
+                    url: '/product/jd/price/' + product_id
+                }).done(function (data) {
+                    price = data[0]['p']
+                    console.log(data)
+                })
+
+                let tr = "<tr><td>飞牛网</td><td>" + name + "</td><td>" + storeName + "</td><td>" + price / 100 + "</td><td><a target='_blank' href='" + detailUrl + "'>" + detailUrl + "</a></td><td><img src='" + img + "'/></td>"
+                tbody = tbody + tr
+            }
+            $("#product-tbody").append(tbody)
+
+        })
+    }
+
+    $('#product-search').click(function () {
+        searchProduct()
+    })
+
+</script>
+{% endblock %}
