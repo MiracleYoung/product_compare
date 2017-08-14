@@ -5,32 +5,36 @@
 # @File    : app.py
 
 from flask import Flask, render_template, jsonify
-from products import get_feiniu_product,get_jd_product,get_jd_product_price, parse_jd_product_page
+from products import get_feiniu_product, get_jd_product, parse_jd_product_page
 import requests
 
 app = Flask(__name__)
 
 session = requests.session()
 
+
 @app.route('/', methods=['GET'])
 def product():
     return render_template('product.html')
 
+
 @app.route('/product/<product_name>', methods=['GET'])
 def get_products(product_name):
     result = {}
-    result_feiniu = get_feiniu_product(product_name, session).json()
-    result_jd = get_jd_product(product_name, session).json()
+    # 飞牛网
+    result_feiniu = get_feiniu_product(product_name, session, 5)
+    # 京东
     jd_shop_product = parse_jd_product_page(product_name, session)
+    shop_ids = [shop_id for shop_id, _ in jd_shop_product.items()]
+    result_jd = get_jd_product(shop_ids, session)
+
     result['feiniu'] = result_feiniu
     result['jd'] = result_jd
     result['jd_shop_product'] = jd_shop_product
     return jsonify(result)
 
-@app.route('/product/jd/price/<id>', methods=['GET'])
-def get_jd_product_price(id):
-    result = get_jd_product_price(id, session).json()
-    return jsonify(result)
+
+
 
 
 if __name__ == '__main__':
