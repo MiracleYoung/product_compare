@@ -1,7 +1,7 @@
 {% extends 'layout/base.html' %}
 
 {% block css %}
-    <link rel="stylesheet" href="/static/css/products.css"/>
+    <link rel="stylesheet" href="/static/css/product.css"/>
 {% endblock css %}
 
 {% block main %}
@@ -29,6 +29,7 @@
 
 {% block js %}
     <script src="/static/js/bootstrap-loading.js"></script>
+    <script src="/static/js/parallel.js"></script>
     <script>
 
 
@@ -94,23 +95,18 @@
                     $("#product-list").append(divProduct)
 
                 }
+                $.bootstrapLoading.end();
             })
         }
-
 
         $('#product-search').click(function () {
             $.bootstrapLoading.start({loadingTips: "正在处理数据，请稍候..."});
             $("#product-list").empty()
-            searchProduct('feiniu')
-            searchProduct('jd')
-            searchProduct('tmall')
-            searchProduct('auchan')
-            searchProduct('yhd')
-            $.bootstrapLoading.end();
+
+            let p = new Parallel([searchProduct('feiniu'), searchProduct('jd'), searchProduct('tmall'), searchProduct('auchan'), searchProduct('yhd')])
+
         })
 
-        {#        (async function () {#}
-        {#            try {#}
         {#                $('#product-search').click(function () {#}
         {#                    $.bootstrapLoading.start({loadingTips: "正在处理数据，请稍候..."});#}
         {#                    $("#product-list").empty()#}
@@ -119,8 +115,12 @@
         {#                    searchProduct('tmall')#}
         {#                    searchProduct('auchan')#}
         {#                    searchProduct('yhd')#}
-        {#                    $.bootstrapLoading.end();#}
         {#                })#}
+
+
+        {#        (async function () {#}
+        {#            try {#}
+        {#                #}
         {##}
         {#            } catch (e) {#}
         {#                console.log(e)#}
