@@ -10,6 +10,8 @@ import datetime
 import json
 from bs4 import BeautifulSoup
 import urllib.parse
+import functools
+import inspect
 
 linux_ua = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36'
 mac_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
@@ -111,10 +113,104 @@ def get_jd_product(shop_ids, session):
     return []
 
 
+def get_product(dom_id):
+    def _get_product(fn):
+        @functools.wraps(fn)
+        def wrap(url, session, headers=None, limit=5):
+            res = session.get(url=url).content
+            page = BeautifulSoup(res, 'html.parser')
+
+            try:
+                product_ul = page.find(id=dom_id).children
+                products = []
+                skip = 1
+
+                ret = fn(product_ul)
+
+                for i, product in enumerate(product_ul):
+                    if not product == '\n':
+                        name = product.select('.product-title a')[0].text
+                        shop_name = '天猫超市'
+                        price = product.select('.ui-price strong')[0].text
+                        detail_url = product.select('.product-img a')[0]['href']
+                        img_url = product.select('.product-img img')[0]['src']
+                        products.append({
+                            'name': name,
+                            'shop_name': shop_name,
+                            'price': price,
+                            'detail_url': detail_url,
+                            'img_url': img_url
+                        })
+                        skip += 1
+                        if skip > limit:
+                            break
+                return products
+
+            except Exception as e:
+                print(e)
+                return []
+
+            return ret
+
+        return wrap
+
+    return _get_product
+
+
+
+    #
+    # url = 'https://list.tmall.com/search_product.htm?&user_id=725677994&type=p&cat=50514008&spm=a3204.7933263.a2227oh.d100&from=chaoshi..pc_1_searchbutton&q={0}'.format(
+    #     kw)
+
+
+def tmall_product(url, session, headers, limit):
+    res = session.get(url=url, headers=headers).content
+    page = BeautifulSoup(res, 'html.parser')
+    try:
+        product_ul = page.find(id='J_ProductList').children
+        products = []
+        skip = 1
+        for i, product in enumerate(product_ul):
+            if not product == '\n':
+                name = product.select('.product-title a')[0].text
+                shop_name = '天猫超市'
+                price = product.select('.ui-price strong')[0].text
+                detail_url = product.select('.product-img a')[0]['href']
+                img_url = product.select('.product-img img')[0]['src']
+                products.append({
+                    'name': name,
+                    'shop_name': shop_name,
+                    'price': price,
+                    'detail_url': detail_url,
+                    'img_url': img_url
+                })
+                skip += 1
+                if skip > limit:
+                    break
+        return products
+
+    except Exception as e:
+        print(e)
+        return []
+
+
 def get_tmall_product(kw, session, limit=5):
-    url = 'https://list.tmall.com/search_product.htm?q={0}&user_id=725677994&type=p&cat=50514008&spm=a3204.7084713.a2227oh.d100&from=chaoshi.index.pc_1_searchbutton'.format(
+    url = 'https://list.tmall.com/search_product.htm?user_id=725677994&type=p&cat=50514008&spm=a3204.7933263.a2227oh.d100&from=chaoshi..pc_1_searchbutton&q={0}'.format(
         kw)
-    res = session.get(url=url).content
+    headers = {
+        ':authority': 'list.tmall.com',
+        ':method': 'GET',
+        ':path': '//search_product.htm?user_id=725677994&type=p&cat=50514008&spm=a3204.7933263.a2227oh.d100&from=chaoshi..pc_1_searchbutton&q={}'.format(
+            urllib.parse.quote(kw)),
+        ':scheme': 'https',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'accept-encoding': 'gzip, deflate, br',
+        'accept-language': 'zh-CN,zh;q=0.8,en;q=0.6,zh-HK;q=0.4',
+        'referer': 'https://list.tmall.com/search_product.htm?q=%B0%FC%D7%D3&user_id=725677994&type=p&cat=50514008&spm=a3204.7084713.a2227oh.d100&from=chaoshi.index.pc_1_searchbutton&smToken=f7c54f27a27847ba97256322636eb293&smSign=OaywForxpkqjLDfCU3rgtA%3D%3D',
+        'upgrade-insecure-requests': '1',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
+    }
+    res = session.get(url=url, headers=headers).content
     page = BeautifulSoup(res, 'html.parser')
     try:
         product_ul = page.find(id='J_ProductList').children
@@ -146,10 +242,18 @@ def get_tmall_product(kw, session, limit=5):
 
 def get_auchan_product(kw, session, limit=5):
     url = 'http://cy.auchandrive.cn/product/search/?q={0}'.format(kw)
-    headers = base_headers.copy()
-    # TODO
-    
-    res = session.get(url=url).content
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,zh-HK;q=0.4',
+        'Connection': 'keep-alive',
+        'Host': 'cy.auchandrive.cn',
+        'Referer': 'http://cy.auchandrive.cn/',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
+    }
+
+    res = session.get(url=url, headers=headers).content
     page = BeautifulSoup(res, 'html.parser')
     try:
         product_ul = page.find(id='auchan_product_list').children
@@ -157,11 +261,12 @@ def get_auchan_product(kw, session, limit=5):
         skip = 1
         for i, product in enumerate(product_ul):
             if not product == '\n':
-                name = product.select('.product-title a')[0].text
-                shop_name = '天猫超市'
-                price = product.select('.ui-price strong')[0].text
-                detail_url = product.select('.product-img a')[0]['href']
-                img_url = product.select('.product-img img')[0]['src']
+                name = product.select('#detail_link strong')[1].string if product.select('#detail_link strong') else ''
+                shop_name = '欧尚'
+                price = product.select('b')[1].text if product.select('b') else ''
+                detail_url = 'http://cy.auchandrive.cn/{0}'.format(product.select('a')[0]['href']) if product.select(
+                    'a') else ''
+                img_url = product.select('#primary_img')[0]['src'] if product.select('#primary_img') else ''
                 products.append({
                     'name': name,
                     'shop_name': shop_name,
@@ -177,4 +282,3 @@ def get_auchan_product(kw, session, limit=5):
     except Exception as e:
         print(e)
         return []
-

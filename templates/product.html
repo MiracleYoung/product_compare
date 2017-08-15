@@ -104,14 +104,32 @@
                     let price = tmallResult[i]['price']
                     let detailUrl = tmallResult[i]['detail_url']
                     let img = tmallResult[i]['img_url']
-                    let tr = "<tr><td>天猫</td><td>" + name + "</td><td>" + storeName + "</td><td>" + price + "</td><td><a target='_blank' href='" + detailUrl + "'>" + detailUrl + "</a></td><td><img src='" + img + "'/></td>"
+                    let tr = "<tr><td>天猫超市</td><td>" + name + "</td><td>" + storeName + "</td><td>" + price + "</td><td><a target='_blank' href='" + detailUrl + "'>" + detailUrl + "</a></td><td><img src='" + img + "'/></td>"
                     tmallTbody = tmallTbody + tr
                 }
                 if (tmallResult.length <= 0) {
-                    let tr = "<tr><td>天猫</td><td>无</td><td>无</td><td>无</td><td>无</td><td>无</td>"
+                    let tr = "<tr><td>天猫超市</td><td>无</td><td>无</td><td>无</td><td>无</td><td>无</td>"
                     tmallTbody = tmallTbody + tr
                 }
                 $("#product-tbody").append(tmallTbody)
+
+
+                let auchanResult = data['auchan']
+                let auchanTbody = ''
+                for (let i = 0; i < auchanResult.length; i++) {
+                    let name = auchanResult[i]['name']
+                    let storeName = auchanResult[i]['shop_name']
+                    let price = auchanResult[i]['price']
+                    let detailUrl = auchanResult[i]['detail_url']
+                    let img = auchanResult[i]['img_url']
+                    let tr = "<tr><td>欧尚</td><td>" + name + "</td><td>" + storeName + "</td><td>" + price + "</td><td><a target='_blank' href='" + detailUrl + "'>" + detailUrl + "</a></td><td><img src='" + img + "'/></td>"
+                    auchanTbody = auchanTbody + tr
+                }
+                if (auchanResult.length <= 0) {
+                    let tr = "<tr><td>欧尚</td><td>无</td><td>无</td><td>无</td><td>无</td><td>无</td>"
+                    auchanTbody = auchanTbody + tr
+                }
+                $("#product-tbody").append(auchanTbody)
 
             })
         }
