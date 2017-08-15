@@ -1,3 +1,13 @@
 #product-tbody td:nth-child(5) {
     word-break: break-all;
 }
+
+#product-list img {
+    width: 100%;
+}
+
+#product-list .username {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
