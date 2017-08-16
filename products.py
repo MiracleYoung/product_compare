@@ -188,3 +188,36 @@ def auchan_product(product, kw, session, limit=5):
         'img_url': img_url
     }
     return ret
+
+
+yhd_url = 'http://search.yhd.com/c-/k{0}/?tp=51.{0}.12.0.3.LrfIR0L-10-2xLwP'
+yhd_headers = base_headers.copy()
+yhd_headers['Host'] = 'search.yhd.com'
+yhd_headers['Referer'] = 'http://search.yhd.com/c-/k%25E8%2582%2589%25E5%258C%2585/?tp=1.1.12.0.3.LrfIAy1-00-8ZNOA'
+
+
+@get_product(yhd_url, yhd_headers, dom_id='itemSearchList')
+def yhd_product(product, kw, session, limit=5):
+    '''
+    1号店
+    '''
+    name = product.select('.proName a')[0].text.replace('\n', '').replace('\t', '') if len(
+        product.select('.proName a')) > 0 else ''
+    shop_name = '1号店'
+    price = product.select('.proPrice em')[0].text if len(product.select('.proPrice em')) > 0 else ''
+    detail_url = product.select('.proImg a')[0]['href'] if len(product.select('.proImg a')) > 0 else ''
+    if  len(product.select('.proImg img')) > 0:
+        if 'original' in product.select('.proImg img')[0].attrs:
+            img_url = product.select('.proImg img')[0]['original']
+        else:
+            img_url = product.select('.proImg img')[0]['src']
+    else:
+        img_url = ''
+    ret = {
+        'name': name,
+        'shop_name': shop_name,
+        'price': price,
+        'detail_url': detail_url,
+        'img_url': img_url
+    }
+    return ret
