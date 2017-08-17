@@ -45,7 +45,7 @@ def get_product(url, headers=None, dom_id=None, dom_class=None):
                         ret = fn(product, kw, session, limit=5)
                         products.append(ret)
                         skip += 1
-                        print(i)
+                        # print(i)
                 return products
             except Exception as e:
                 print(e)
